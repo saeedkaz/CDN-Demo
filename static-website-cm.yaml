@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: static-website
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>CDN Test</title>
+      <script>
+        async function fetchData() {
+          const response = await fetch("/");
+          const date = response.headers.get("Date");
+          const cacheStatus = response.headers.get("X-Cache") || "Unknown";
+          const lastBackendFetch = response.headers.get("X-Last-Backend-Fetch") || "N/A";
+
+          document.getElementById("cache-status").innerText = cacheStatus;
+          document.getElementById("time").innerText = date;
+          document.getElementById("last-backend-fetch").innerText = lastBackendFetch;
+
+          if (cacheStatus === "HIT") {
+            document.body.style.backgroundColor = "lightgreen";
+          } else {
+            document.body.style.backgroundColor = "lightcoral";
+          }
+        }
+        setInterval(fetchData, 2000);
+      </script>
+    </head>
+    <body onload="fetchData()">
+      <h1>CDN Test</h1>
+      <p>Cache Status: <span id="cache-status">Loading...</span></p>
+      <p>Last Fetched: <span id="time">Loading...</span></p>
+      <p>Last Backend Fetch: <span id="last-backend-fetch">Loading...</span></p>
+    </body>
+    </html>

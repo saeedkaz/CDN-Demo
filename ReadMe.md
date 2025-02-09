@@ -19,6 +19,6 @@ k apply -f deploy.yaml
 
 k apply -f backend-service.yaml
 
-# Wait for Pods being Up
+>  Wait for Pods being Up
 
 k apply -f nginx-cdn.yaml

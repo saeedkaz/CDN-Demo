@@ -11,7 +11,6 @@ kubectl label node kind-control-plane ingress-ready=true
 >  https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 ```
 k apply -f deploy.yaml
-
 k apply -f backend-service.yaml
 ```
 >  Wait for Pods being Up

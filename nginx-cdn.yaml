@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: cdn-nginx
+spec:
+ replicas: 2
+ selector:
+   matchLabels:
+     app: cdn-nginx
+ template:
+   metadata:
+     labels:
+       app: cdn-nginx
+   spec:
+     containers:
+       - name: nginx
+         image: nginx:latest
+         imagePullPolicy: IfNotPresent
+         ports:
+           - containerPort: 81
+         volumeMounts:
+           - mountPath: /etc/nginx/nginx.conf
+             subPath: nginx.conf
+             name: nginx-config
+     volumes:
+       - name: nginx-config
+         configMap:
+           name: nginx-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: nginx-config
+data:
+ nginx.conf: |
+   worker_processes 1;
+   events { worker_connections 1024; }
+   http {
+     proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=STATIC:10m inactive=60m;
+     server {
+       listen 81;
+       location / {
+         proxy_cache STATIC;
+         proxy_cache_valid 200 1h;
+         proxy_pass http://backend-service:81;  # ✅ Correct service name and port
+         add_header X-Cache $upstream_cache_status;
+       }
+     }
+   }
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: cdn-nginx
+spec:
+ selector:
+   app: cdn-nginx
+ ports:
+   - protocol: TCP
+     port: 81
+     targetPort: 81
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+ name: cdn-ingress
+spec:
+ rules:
+   - host: cdn.localtest.me
+     http:
+       paths:
+         - path: /
+           pathType: Prefix
+           backend:
+             service:
+               name: cdn-nginx
+               port:
+                 number: 81
+
